@@ -2,7 +2,7 @@
 
 ## Problem Formulation
 
-The objective of the Microservice Build Pipeline problem is to determine the minimum amount of time to build an entire system consisting of n microservices. We are given a collection of microservices, where each service has an associated build time, as well as a set of directed dependency edges indicating which services must be completed before others can begin building. We represent this system as a directed graph G = (V,E), where each vertex represents a microservice and each directed edge (u,v) indicates that service v depends on service u. Each vertex v also has an associated nonnegative build duration t(v).
+The objective of the Microservice Build Pipeline problem is to determine the minimum amount of time to build an entire system consisting of n microservices. We are given a collection of microservices, where each service has an associated build time, as well as a set of directed dependency edges indicating which services must be completed before others can begin building. We represent this system as a directed graph D = (V,E), where each vertex represents a microservice and each directed edge (u,v) indicates that service v depends on service u. Each vertex v also has an associated nonnegative build duration t(v).
 
 Immediately, we want to determine whether or not the dependency graph contains a directed cycle. If a cycle exists, then the build pipeline is invalid because at least one service would depend, directly or indirectly, on itself. If the graph has no cycles, then we must determine the critical path, which is the longest-duration path through the dependency graph. Since independent microservices can be built simultaneously, the critical path determines the minimum possible time required to complete the entire build.
 
@@ -19,22 +19,22 @@ After examining every valid ordering, the algorithm returns the minimum total bu
 For the bonus problem, we test each dependency edge individually. We temporarily remove an edge, recalculate the minimum build time, and compare the result with the original build time. We restore the edge before testing the next one. The algorithm records the edge that produces the greatest reduction in build time.
 
 ```text
-Algorithm buildPipelineBaseline(G, durations):
+Algorithm buildPipelineBaseline(D, durations):
     input:
-        G = Directed dependency graph (V, E)
+        D = Directed dependency graph (V, E)
         durations = Build duration for each microservice
 
     output:
         Minimum build time, critical path,
         and best dependency edge to remove
 
-    if G contains a directed cycle:
+    if D contains a directed cycle:
         return "Invalid build pipeline"
 
     best_time = infinity
     best_path = []
 
-    Generate every valid topological ordering of G
+    Generate every valid topological ordering of D
 
     for each ordering in all orderings:
 
@@ -70,6 +70,11 @@ Algorithm buildPipelineBaseline(G, durations):
     return original_time, best_path, best_edge
 ```
 
+```text
+Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
+    if D contains
+```
+
 ## Algorithmic Strategy
 
 We use topological sorting to process services in dependency order and dynamic programming to reuse the finish times already calculated. This lets us process each service once instead of checking every possible ordering. We assume that independent services can build at the same time, with no limit on available workers.
@@ -85,7 +90,7 @@ If we process fewer than n services, the graph has a directed cycle and the pipe
 For the bonus problem, we ignore one edge at a time, calculate the build time again, and save the edge that reduces it the most. Removing an edge from a graph with no cycles cannot create a cycle. If no edge saves time, we return NONE. Before removing the chosen dependency from the actual pipeline, we must check that it is not needed.
 
 ```text
-Algorithm analyzePipeline(G, durations, ignored_edge = NONE):
+Algorithm analyzePipeline(D, durations, ignored_edge = NONE):
     Count dependencies using every edge except ignored_edge
     queue = All vertices with indegree zero
 
@@ -130,8 +135,8 @@ Algorithm analyzePipeline(G, durations, ignored_edge = NONE):
 
     return total_time, critical_path
 
-Algorithm buildPipelineEfficient(G, durations):
-    result = analyzePipeline(G, durations)
+Algorithm buildPipelineEfficient(D, durations):
+    result = analyzePipeline(D, durations)
 
     if result is "Invalid build pipeline":
         return "Invalid build pipeline"
@@ -141,7 +146,7 @@ Algorithm buildPipelineEfficient(G, durations):
     greatest_improvement = 0
 
     for each edge (u, v) in E:
-        new_time, new_path = analyzePipeline(G, durations, (u, v))
+        new_time, new_path = analyzePipeline(D, durations, (u, v))
         improvement = original_time - new_time
 
         if improvement > greatest_improvement:
