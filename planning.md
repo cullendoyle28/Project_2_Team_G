@@ -10,98 +10,63 @@ As an additional optimization objective, we want to identify the single dependen
 
 ## Baseline Solution
 
-We implemented a brute-force approach that explores possible build sequences and calculates the total completion time for each valid sequence. It first checks whether the dependency graph contains a directed cycle. If a cycle is detected, then the algorithm reports that the build pipeline is invalid.
+We implemented a brute-force approach that explores every possible directed path in the dependency graph using DFS (Depth-First Search). It first checks whether the dependency graph contains a directed cycle. If a cycle is detected, then the algorithm reports that the build pipeline is invalid.
 
-If the graph contains no cycles, then the algorithm generates all possible topological orderings of the microservices. A topological ordering is a sequence in which every service appears after all of its dependencies. For each valid ordering, we calculate the earliest completion time of every service by considering the completion times of its dependencies. The maximum completion time represents the total time required to complete that build schedule.
+If the graph contains no cycles, the algorithm identifies all starting vertices, which are vertices with an indegree of zero. It begins a DFS traversal from each of these vertices. During each traversal, we keep track of the current path and the sum of the build durations of all services along that path. Whenever a path has a greater total duration than the longest path found so far, we update the maximum build time and save that path.
 
-After examining every valid ordering, the algorithm returns the minimum total build time and the corresponding critical path.
+By starting at every vertex with no incoming edges, we ensure that every complete dependency chain is considered. After examining all possible paths from these starting vertices, the algorithm returns the longest-duration path and its total build time, which represent the critical path and minimum possible build time.
 
-For the bonus problem, we test each dependency edge individually. We temporarily remove an edge, recalculate the minimum build time, and compare the result with the original build time. We restore the edge before testing the next one. The algorithm records the edge that produces the greatest reduction in build time.
+For the bonus problem, we test each dependency edge individually. We temporarily ignore one edge, recalculate the longest path, and compare the resulting build time with the original build time. The algorithm records the edge that produces the greatest reduction in build time.
 
-```text
-Algorithm buildPipelineBaseline(D, durations):
-    input:
-        D = Directed dependency graph (V, E)
-        durations = Build duration for each microservice
-
-    output:
-        Minimum build time, critical path,
-        and best dependency edge to remove
-
-    if D contains a directed cycle:
-        return "Invalid build pipeline"
-
-    best_time = infinity
-    best_path = []
-
-    Generate every valid topological ordering of D
-
-    for each ordering in all orderings:
-
-        Calculate the earliest completion time
-        of every service while respecting dependencies
-
-        current_time = Maximum completion time
-
-        if current_time < best_time:
-            best_time = current_time
-            best_path = corresponding critical path
-
-    original_time = best_time
-
-    best_edge = NONE
-    greatest_improvement = 0
-
-    for each edge (u, v) in E:
-
-        Temporarily remove edge (u, v)
-
-        if the modified graph is valid:
-            Recalculate the minimum build time
-
-            improvement = original_time - new_time
-
-            if improvement > greatest_improvement:
-                greatest_improvement = improvement
-                best_edge = (u, v)
-
-        Restore edge (u, v)
-
-    return original_time, best_path, best_edge
-```
 
 ```text
 Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
+
+    if V is empty:
+        return 0, []
+
     if D contains a directed cycle:
         return "Invalid build pipeline"
 
-    best_time = 0
+    best_time = negative infinity
     best_path = []
 
+    for each vertex v in V:
+        indegree[v] = 0
+    
+    for each edge (u, v) in E:
+        indegree[v] = indegree[v] + 1
+
     for each vertex start in V:
-        findLongestPath(start, durations[start], [start])
+        if indegree[start] == 0:
+            findLongestPath(start, durations[start], [start])
     
     return best_time, best_path
 
-Algorithm findLongestPath(v, path_time, path):
-    if path_time > best_time:
-        best_time = path_time
-        best_path = copy(path)
 
-    for each edge (v, next) in D:
-        if (v, next) is not ignored_edge:
-            findLongestPath(next, path_time + durations[next], path + [next])
+    Procedure findLongestPath(v, path_time, path):
+
+        if path_time > best_time:
+            best_time = path_time
+            best_path = copy(path)
+
+        for each edge (v, next) in D:
+            if (v, next) != ignored_edge:
+                findLongestPath(next, path_time + durations[next], path + [next])
+
 
 Algorithm buildPipelineBaseline(D, durations):
+
     original_time, original_path = analyzePipelineBaseline(D, durations)
+
+    if original_time == "Invalid build pipeline":
+        return "Invalid build pipeline"
 
     best_edge = NONE
     greatest_improvement = 0
 
     for each edge (u, v) in E:
-
-        new_time, new_path =
-            analyzePipelineBaseline(D, durations, (u, v))
+        new_time, new_path = analyzePipelineBaseline(D, durations, (u, v))
 
         improvement = original_time - new_time
 
@@ -197,9 +162,11 @@ Algorithm buildPipelineEfficient(D, durations):
 
 Let n be the number of services and m be the number of dependency edges. We store each service's outgoing edges in a list and assume each calculation with build times takes constant time.
 
-For the baseline solution, checking for cycles takes O(n + m) time. There can be n! valid orderings, and calculating finish times for each takes O(n + m) time. This gives O(n! * (n + m)) time in the worst case, assuming each ordering also takes at most O(n + m) time to generate. All valid orderings give the same earliest finish times, so checking every ordering repeats work.
+For the baseline solution, we use DFS (Depth-First Search) to explore every possible directed path in the graph. In the worst case, a DAG (directed acyclic graph) can contain exponentially many possible paths, growing up to O(2^n). Since maintaining and copying each path can require up to O(n) time, the worst-case time complexity is O(n2^n).
 
-The baseline bonus repeats this calculation for each edge, giving O((m + 1) * n! * (n + m)) time. If we store all K valid orderings, total space is O(K * n + n + m), where K can be as large as n!. If we generate and check one ordering at a time, undoing choices to try others, total space can be O(n + m).
+For the baseline bonus, the algorithm repeats this process for every edge in the graph. Since there are m edges, the worst-case time complexity becomes O((m+1)n2^n).
+
+Also, the space complexity is O(n+m), which accounts for the graph, recursion stack, current path, and best path. 
 
 For the graph-based solution, counting dependencies takes O(n + m) time. Each service enters and leaves the queue once, and each edge is checked once during processing. Finding the largest finish time and tracing the path take O(n) time. Together, checking for cycles, finding the minimum build time, and finding a critical path take O(n + m) time.
 
