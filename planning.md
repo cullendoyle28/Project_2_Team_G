@@ -63,10 +63,12 @@ Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
 
 Algorithm buildPipelineBaseline(D, durations):
 
-    original_time, original_path = analyzePipelineBaseline(D, durations)
+    result = analyzePipelineBaseline(D, durations)
 
-    if original_time == "Invalid build pipeline":
+    if original_time is "Invalid build pipeline":
         return "Invalid build pipeline"
+
+    original_time, original_path = result
 
     best_edge = NONE
     greatest_improvement = 0
