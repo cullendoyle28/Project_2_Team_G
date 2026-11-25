@@ -72,7 +72,44 @@ Algorithm buildPipelineBaseline(D, durations):
 
 ```text
 Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
-    if D contains
+    if D contains a directed cycle:
+        return "Invalid build pipeline"
+
+    best_time = 0
+    best_path = []
+
+    for each vertex start in V:
+        findLongestPath(start, durations[start], [start])
+    
+    return best_time, best_path
+
+Algorithm findLongestPath(v, path_time, path):
+    if path_time > best_time:
+        best_time = path_time
+        best_path = copy(path)
+
+    for each edge (v, next) in D:
+        if (v, next) is not ignored_edge:
+            findLongestPath(next, path_time + durations[next], path + [next])
+
+Algorithm buildPipelineBaseline(D, durations):
+    original_time, original_path = analyzePipelineBaseline(D, durations)
+
+    best_edge = NONE
+    greatest_improvement = 0
+
+    for each edge (u, v) in E:
+
+        new_time, new_path =
+            analyzePipelineBaseline(D, durations, (u, v))
+
+        improvement = original_time - new_time
+
+        if improvement > greatest_improvement:
+            greatest_improvement = improvement
+            best_edge = (u, v)
+
+    return original_time, original_path, best_edge
 ```
 
 ## Algorithmic Strategy
