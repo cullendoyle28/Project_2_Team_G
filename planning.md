@@ -2,7 +2,7 @@
 
 ## Problem Formulation
 
-The objective of the Microservice Build Pipeline problem is to determine the minimum amount of time to build an entire system consisting of n microservices. We are given a collection of microservices, where each service has an associated build time, as well as a set of directed dependency edges indicating which services must be completed before others can begin building. We represent this system as a directed graph D = (V,E), where each vertex represents a microservice and each directed edge (u,v) indicates that service v depends on service u. Each vertex v also has an associated nonnegative build duration t(v).
+The objective of the Microservice Build Pipeline problem is to determine the minimum amount of time to build an entire system consisting of $n$ microservices. We are given a collection of microservices, where each service has an associated build time, as well as a set of directed dependency edges indicating which services must be completed before others can begin building. We represent this system as a directed graph $D = (V,E)$, where each vertex represents a microservice and each directed edge $(u,v)$ indicates that service $v$ depends on service $u$. Each vertex $v$ also has an associated nonnegative build duration $t(v)$.
 
 Immediately, we want to determine whether or not the dependency graph contains a directed cycle. If a cycle exists, then the build pipeline is invalid because at least one service would depend, directly or indirectly, on itself. If the graph has no cycles, then we must determine the critical path, which is the longest-duration path through the dependency graph. Since independent microservices can be built simultaneously, the critical path determines the minimum possible time required to complete the entire build.
 
@@ -12,7 +12,7 @@ As an additional optimization objective, we want to identify the single dependen
 
 We implemented a brute-force approach that explores every possible directed path in the dependency graph using DFS (Depth-First Search). It first checks whether the dependency graph contains a directed cycle. If a cycle is detected, then the algorithm reports that the build pipeline is invalid.
 
-If the graph contains no cycles, the algorithm identifies all starting vertices, which are vertices with an indegree of zero. It begins a DFS traversal from each of these vertices. During each traversal, we keep track of the current path and the sum of the build durations of all services along that path. Whenever a path has a greater total duration than the longest path found so far, we update the maximum build time and save that path.
+If the graph contains no cycles, the algorithm identifies all starting vertices, which are vertices with an indegree of zero. It begins a DFS traversal from each of these vertices. During each traversal, we keep track of the current path and the sum of the build durations of all services along that path. Whenever a path has a greater total duration than the longest path found so far, we update the maximum build time and save a copy of the current path.
 
 By starting at every vertex with no incoming edges, we ensure that every path beginning at a source vertex is considered. After examining all possible paths from these starting vertices, the algorithm returns the longest-duration path and its total build time, which represent the critical path and minimum possible build time.
 
@@ -88,13 +88,13 @@ Algorithm buildPipelineBaseline(D, durations):
 
 We use topological sorting to process services in dependency order and dynamic programming to reuse the finish times already calculated. This lets us process each service once instead of checking every possible ordering. We assume that independent services can build at the same time, with no limit on available workers.
 
-First, we count each service's dependencies. This count is called its indegree. Services with no dependencies go into a queue. For each service v, we store its earliest finish time finish(v) and a previous service, called its predecessor, to help trace the critical path.
+First, we count each service's dependencies. This count is called its indegree. Services with no dependencies go into a queue. For each service $v$, we store its earliest finish time $finish(v)$ and a previous service, called its predecessor, to help trace the critical path.
 
-We start with finish(v) = t(v). For each edge (u,v), we compare finish(v) with finish(u) + t(v). If the second value is larger, we save it and record u as the predecessor. We then lower v's indegree by one and add v to the queue when the count reaches zero.
+We start with $finish(v) = t(v)$. For each edge $(u,v)$, we compare $finish(v)$ with $finish(u) + t(v)$. If the second value is larger, we save it and record u as the predecessor. We then lower $v$'s indegree by one and add $v$ to the queue when the count reaches zero.
 
-The rule is finish(v) = t(v) + max finish(u), where u is a direct dependency of v. If v has no dependencies, we use zero for the maximum. This works because a service can start as soon as all of its dependencies finish.
+The rule is $finish(v) = t(v) + max(finish(u))$, where $u$ is a direct dependency of $v$. If $v$ has no dependencies, we use zero for the maximum. This works because a service can start as soon as all of its dependencies finish.
 
-If we process fewer than n services, the graph has a directed cycle and the pipeline is invalid. Otherwise, the largest finish time is the minimum total build time. To find a critical path, we start at a service with this finish time, follow its predecessors, and reverse the path. If several paths take the same longest time, we can return any one. Separate groups of services also work, and an empty graph returns zero time and an empty path.
+If we process fewer than $n$ services, the graph has a directed cycle and the pipeline is invalid. Otherwise, the largest finish time is the minimum total build time. To find a critical path, we start at a service with this finish time, follow its predecessors, and reverse the path. If several paths take the same longest time, we can return any one. Separate groups of services also work, and an empty graph returns zero time and an empty path.
 
 For the bonus problem, we ignore one edge at a time, calculate the build time again, and save the edge that reduces it the most. Removing an edge from a graph with no cycles cannot create a cycle. If no edge saves time, we return NONE. Before removing the chosen dependency from the actual pipeline, we must check that it is not needed.
 
@@ -167,16 +167,16 @@ Algorithm buildPipelineEfficient(D, durations):
 
 ## Complexity Analysis
 
-Let n be the number of services and m be the number of dependency edges. We store each service's outgoing edges in a list and assume each calculation with build times takes constant time.
+Let $n$ be the number of services and $m$ be the number of dependency edges. We store each service's outgoing edges in a list and assume each calculation with build times takes constant time.
 
-For the baseline solution, we use DFS (Depth-First Search) to explore every possible directed path in the graph. In the worst case, a DAG (directed acyclic graph) can contain exponentially many possible paths, growing up to O(2^n). Since maintaining and copying each path can require up to O(n) time, the worst-case time complexity is O(n2^n).
+For the baseline solution, we use DFS (Depth-First Search) to explore every possible directed path in the graph. In the worst case, a DAG (directed acyclic graph) can contain exponentially many possible paths, growing up to $O(2^n)$. Since maintaining and copying each path can require up to $O(n)$ time, the worst-case time complexity is $O(n2^n)$.
 
-For the baseline bonus, the algorithm repeats this process for every edge in the graph. Since there are m edges, the worst-case time complexity becomes O((m+1)n2^n).
+For the baseline bonus, the algorithm repeats this process for every edge in the graph. Since there are $m$ edges, the worst-case time complexity becomes $O((m+1)n2^n)$.
 
-Also, the space complexity is O(n+m), which accounts for the graph, recursion stack, current path, and best path. 
+Also, the space complexity is $O(n+m)$, which accounts for the graph, recursion stack, current path, and best path. 
 
-For the graph-based solution, counting dependencies takes O(n + m) time. Each service enters and leaves the queue once, and each edge is checked once during processing. Finding the largest finish time and tracing the path take O(n) time. Together, checking for cycles, finding the minimum build time, and finding a critical path take O(n + m) time.
+For the graph-based solution, counting dependencies takes $O(n+m)$ time. Each service enters and leaves the queue once, and each edge is checked once during processing. Finding the largest finish time and tracing the path take $O(n)$ time. Together, checking for cycles, finding the minimum build time, and finding a critical path take $O(n+m)$ time.
 
-Storing the graph takes O(n + m) space. The dependency counts, finish times, predecessors, queue, and path use O(n) extra space, giving O(n + m) total space.
+Storing the graph takes $O(n+m)$ space. The dependency counts, finish times, predecessors, queue, and path use $O(n)$ extra space, giving $O(n+m)$ total space.
 
-For the graph-based bonus, we run the calculation once for the original graph and once for each edge, giving O((m + 1) * (n + m)) time. We reuse the working space for each test, so total space stays O(n + m).
+For the graph-based bonus, we run the calculation once for the original graph and once for each edge, giving $O((m+1)*(n+m))$ time. We reuse the working space for each test, so total space stays $O(n+m)$.
