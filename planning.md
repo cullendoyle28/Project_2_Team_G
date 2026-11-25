@@ -14,7 +14,7 @@ We implemented a brute-force approach that explores every possible directed path
 
 If the graph contains no cycles, the algorithm identifies all starting vertices, which are vertices with an indegree of zero. It begins a DFS traversal from each of these vertices. During each traversal, we keep track of the current path and the sum of the build durations of all services along that path. Whenever a path has a greater total duration than the longest path found so far, we update the maximum build time and save that path.
 
-By starting at every vertex with no incoming edges, we ensure that every complete dependency chain is considered. After examining all possible paths from these starting vertices, the algorithm returns the longest-duration path and its total build time, which represent the critical path and minimum possible build time.
+By starting at every vertex with no incoming edges, we ensure that every path beginning at a source vertex is considered. After examining all possible paths from these starting vertices, the algorithm returns the longest-duration path and its total build time, which represent the critical path and minimum possible build time.
 
 For the bonus problem, we test each dependency edge individually. We temporarily ignore one edge, recalculate the longest path, and compare the resulting build time with the original build time. The algorithm records the edge that produces the greatest reduction in build time.
 
