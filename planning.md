@@ -41,7 +41,7 @@ Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
 
     for each vertex start in V:
         if indegree[start] == 0:
-            findLongestPath(start, durations[start], [start])
+            findLongestPath(start, durations[start])
     
     return best_time, best_path
 
@@ -65,7 +65,7 @@ Algorithm buildPipelineBaseline(D, durations):
 
     result = analyzePipelineBaseline(D, durations)
 
-    if original_time is "Invalid build pipeline":
+    if result is "Invalid build pipeline":
         return "Invalid build pipeline"
 
     original_time, original_path = result
