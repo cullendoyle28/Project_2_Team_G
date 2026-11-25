@@ -30,12 +30,14 @@ Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
 
     best_time = negative infinity
     best_path = []
+    current_path = []
 
     for each vertex v in V:
         indegree[v] = 0
     
     for each edge (u, v) in E:
-        indegree[v] = indegree[v] + 1
+        if (u, v) != ignored_edge:
+            indegree[v] = indegree[v] + 1
 
     for each vertex start in V:
         if indegree[start] == 0:
@@ -44,15 +46,19 @@ Algorithm analyzePipelineBaseline(D, durations, ignored_edge = NONE):
     return best_time, best_path
 
 
-    Procedure findLongestPath(v, path_time, path):
+    Procedure findLongestPath(v, path_time):
+
+        Add v to current_path
 
         if path_time > best_time:
             best_time = path_time
-            best_path = copy(path)
+            best_path = copy(current_path)
 
-        for each edge (v, next) in D:
+        for each edge (v, next) in E:
             if (v, next) != ignored_edge:
-                findLongestPath(next, path_time + durations[next], path + [next])
+                findLongestPath(next, path_time + durations[next])
+
+        Remove the last vertex from current_path
 
 
 Algorithm buildPipelineBaseline(D, durations):
